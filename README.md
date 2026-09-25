@@ -1,106 +1,113 @@
 # Recomendador de Límite de Crédito
 
-PoC de MLOps para apoyar al Área de Riesgo Crediticio mediante recomendaciones de límite de crédito.
+PoC de MLOps para recomendar límites de crédito mediante un modelo predictivo expuesto a través de una API FastAPI.
 
 > Demo académica con datos anonimizados/sintéticos. La recomendación no reemplaza la revisión humana.
 
-## Objetivo
+## Qué resuelve
 
-El modelo recibe información financiera y de comportamiento de pago de un cliente. Devuelve un límite de crédito recomendado y una decisión:
+A partir de datos financieros y de comportamiento de pago, el modelo estima un límite de crédito recomendado y devuelve una decisión:
 
-- Aumentar
-- Mantener
-- Reducir
+- `Aumentar`
+- `Mantener`
+- `Reducir`
 
-La solución incluye API, interfaz web, validación de cartera, revisión humana, logs y despliegue en Google Cloud Run.
+La solución incluye:
 
-## Arquitectura
+- API FastAPI;
+- interfaz de evaluación individual;
+- validación de cartera Excel;
+- revisión humana de la recomendación;
+- dashboard de la sesión;
+- logs y monitoreo en Google Cloud Run.
 
-```text
-Datos anonimizados/sintéticos
-        │
-        ▼
-Validación de cartera (/ingesta)
-        │
-        ▼
-Modelo entrenado (.joblib)
-        │
-        ▼
-API FastAPI
-        │
-        ▼
-Ficha de evaluación crediticia
-        │
-        ▼
-Recomendación + revisión humana
-        │
-        ▼
-Dashboard y observabilidad
-```
-
-## Estructura
+## Estructura del proyecto
 
 ```text
-app/
-├── __init__.py
-├── main.py
-├── observability.py
-└── static/
-    ├── index.html
-    ├── ingesta.html
-    └── dashboard.html
-
-data/fixtures/
-└── customer-example.json
-
-models/
-├── credito-limite.joblib
-└── credito-limite-metrics.json
-
-scripts/
-├── check_drift.py
-└── smoke_load.py
-
-Dockerfile
-requirements.txt
-README.md
+.
+├── app/
+│   ├── __init__.py
+│   ├── main.py
+│   ├── observability.py
+│   └── static/
+│       ├── index.html
+│       ├── ingesta.html
+│       └── dashboard.html
+├── data/
+│   └── fixtures/
+│       └── customer-example.json
+├── models/
+│   ├── credito-limite.joblib
+│   └── credito-limite-metrics.json
+├── scripts/
+│   ├── check_drift.py
+│   └── smoke_load.py
+├── Dockerfile
+├── requirements.txt
+└── README.md
 ```
 
-## Ejecución local y verificación de reproducibilidad
+## Requisitos
 
-Una persona con acceso al repositorio puede ejecutar el proyecto sin usar Cloud Shell ni credenciales de Google Cloud.
+- Python 3.12 o superior
+- Git
+- Docker (opcional, para ejecutar mediante contenedor)
+- Acceso al repositorio privado
 
-### 1. Clonar el repositorio
+El archivo `models/credito-limite.joblib` es obligatorio: contiene el modelo ya entrenado.
+
+---
+
+# Verificación de reproducibilidad
+
+Estos pasos permiten levantar una copia independiente del proyecto sin usar Cloud Shell, GCP ni credenciales de otra persona.
+
+## 1. Clonar el repositorio
 
 ```bash
 git clone https://github.com/pimartinez97/tp-_limite_credito.git
 cd tp-_limite_credito
 ```
 
-### 2. Crear entorno e instalar dependencias
+Si el repositorio ya había sido clonado anteriormente, actualizarlo:
+
+```bash
+git fetch origin
+git switch main
+git pull --ff-only origin main
+```
+
+## 2. Verificar los archivos indispensables
+
+```bash
+ls -l requirements.txt
+ls -l models/credito-limite.joblib
+ls -l models/credito-limite-metrics.json
+```
+
+Los tres comandos deben mostrar archivos existentes.
+
+## 3. Crear el entorno e instalar dependencias
+
+Mac/Linux:
 
 ```bash
 python3 -m venv .venv
 source .venv/bin/activate
-pip install -r requirements.txt
+pip install --upgrade -r requirements.txt
 ```
 
-### 3. Verificar el modelo
+Windows PowerShell:
 
-```bash
-ls models
+```powershell
+python -m venv .venv
+.venv\Scripts\activate
+pip install --upgrade -r requirements.txt
 ```
 
-Deben aparecer:
+## 4. Iniciar la API
 
-```text
-credito-limite.joblib
-credito-limite-metrics.json
-```
-
-> `credito-limite.joblib` es el modelo entrenado y es indispensable para realizar predicciones.
-
-### 4. Iniciar la API
+Mac/Linux:
 
 ```bash
 export MODEL_PATH="models/credito-limite.joblib"
@@ -109,7 +116,18 @@ export METRICS_PATH="models/credito-limite-metrics.json"
 uvicorn app.main:app --host 0.0.0.0 --port 8080 > api.log 2>&1 &
 ```
 
-### 5. Verificar el estado del servicio
+Windows PowerShell:
+
+```powershell
+$env:MODEL_PATH="models/credito-limite.joblib"
+$env:METRICS_PATH="models/credito-limite-metrics.json"
+
+uvicorn app.main:app --host 0.0.0.0 --port 8080
+```
+
+## 5. Comprobar que el servicio funciona
+
+Mac/Linux:
 
 ```bash
 sleep 3
@@ -122,7 +140,13 @@ Resultado esperado:
 {"status":"ok","model_loaded":true,"model_version":"credito-limite"}
 ```
 
-### 6. Probar una predicción
+Si no responde, revisar el error de inicio:
+
+```bash
+cat api.log
+```
+
+## 6. Probar una predicción
 
 ```bash
 curl -X POST "http://localhost:8080/predict" \
@@ -132,16 +156,19 @@ curl -X POST "http://localhost:8080/predict" \
 
 La respuesta debe contener:
 
-- `assigned_credit_limit_pred`
-- `credit_limit_actual`
-- `umbral_abs`
-- `decision`
+```text
+model_version
+assigned_credit_limit_pred
+credit_limit_actual
+umbral_abs
+decision
+```
 
-La decisión será `Aumentar`, `Mantener` o `Reducir`.
+El valor de `decision` será `Aumentar`, `Mantener` o `Reducir`.
 
-### 7. Abrir la interfaz
+## 7. Abrir la interfaz web
 
-Con la API ejecutándose, abrir:
+Abrir en un navegador:
 
 ```text
 http://localhost:8080
@@ -149,15 +176,17 @@ http://localhost:8080
 
 Pantallas disponibles:
 
-| Ruta | Función |
+| Ruta | Descripción |
 |---|---|
-| `/` | Ficha de evaluación crediticia |
-| `/ingesta` | Validación de cartera Excel |
-| `/dashboard` | Indicadores de actividad de la sesión |
-| `/docs` | Documentación Swagger de la API |
-| `/health` | Estado del modelo y del servicio |
+| `/` | Ficha de evaluación crediticia y revisión humana |
+| `/ingesta` | Validación de un archivo Excel de cartera |
+| `/dashboard` | Resumen de actividad de la sesión |
+| `/docs` | Documentación Swagger/OpenAPI |
+| `/health` | Estado del modelo y de la API |
 
-## Ejecución con Docker
+---
+
+# Ejecución con Docker
 
 Construir la imagen:
 
@@ -177,25 +206,26 @@ Luego abrir:
 http://localhost:8080
 ```
 
-## Despliegue
+---
+
+# Despliegue y operación
 
 La PoC fue desplegada en Google Cloud Run como servicio privado mediante IAM.
 
-Incluye:
+La operación incluye:
 
-- API FastAPI con endpoints `/health`, `/predict` y `/batch-score`;
-- imagen Docker;
-- Artifact Registry y Cloud Build;
-- logs estructurados de inferencia;
+- endpoints `/health`, `/predict` y `/batch-score`;
+- logs estructurados de predicción;
 - métricas de solicitudes, latencia y errores;
 - revisiones de Cloud Run para rollback;
-- validación de drift mediante PSI.
+- validación de drift mediante PSI;
+- interfaz de evaluación, ingesta y dashboard.
 
-## Privacidad y uso responsable
+# Privacidad y uso responsable
 
-- Se utilizan datos anonimizados o sintéticos.
-- No se publican datos personales identificables.
-- La interfaz no persiste información de clientes en una base de datos.
-- El dashboard resume únicamente la sesión actual del navegador.
-- La recomendación del modelo requiere revisión humana.
-- El repositorio y el servicio de producción se mantienen privados.
+- Los datos de demostración son anonimizados o sintéticos.
+- No se incluyen datos personales identificables.
+- El Excel original no se publica en el repositorio.
+- El dashboard no usa una base de datos: resume la sesión actual del navegador.
+- La recomendación debe ser revisada por un analista.
+- El repositorio y el servicio desplegado se mantienen privados.
