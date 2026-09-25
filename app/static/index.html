@@ -1,0 +1,559 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Recomendador de Límite de Crédito</title>
+
+  <style>
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      padding: 32px;
+      font-family: Arial, sans-serif;
+      background: #f1f5f9;
+      color: #0f172a;
+    }
+
+    main {
+      max-width: 1200px;
+      margin: auto;
+    }
+
+    header {
+      background: #0f172a;
+      color: white;
+      padding: 30px;
+      border-radius: 18px;
+      margin-bottom: 18px;
+    }
+
+    h1 {
+      margin: 0 0 8px;
+      font-size: 38px;
+    }
+
+    header p {
+      margin: 0;
+      color: #cbd5e1;
+      font-size: 18px;
+    }
+
+    .header-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-top: 18px;
+    }
+
+    .header-link {
+      display: inline-block;
+      padding: 10px 14px;
+      border: 1px solid #93c5fd;
+      border-radius: 9px;
+      color: white;
+      font-size: 14px;
+      font-weight: bold;
+      text-decoration: none;
+    }
+
+    .header-link:hover {
+      background: #1e3a8a;
+    }
+
+    .notice {
+      color: #475569;
+      margin: 18px 0;
+      font-size: 15px;
+    }
+
+    .section-title {
+      margin: 0 0 8px;
+      font-size: 22px;
+    }
+
+    .section-description {
+      margin: 0 0 20px;
+      color: #475569;
+      font-size: 14px;
+    }
+
+    .evaluation-card {
+      background: white;
+      padding: 28px;
+      border-radius: 18px;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 18px;
+    }
+
+    label {
+      display: flex;
+      flex-direction: column;
+      gap: 7px;
+      font-size: 15px;
+      font-weight: bold;
+    }
+
+    input,
+    select,
+    textarea {
+      width: 100%;
+      padding: 13px;
+      border: 1px solid #cbd5e1;
+      border-radius: 10px;
+      background: white;
+      color: #0f172a;
+      font-size: 17px;
+    }
+
+    input:focus,
+    select:focus,
+    textarea:focus {
+      outline: 3px solid #bfdbfe;
+      border-color: #2563eb;
+    }
+
+    .primary-button,
+    .success-button,
+    .review-button {
+      margin-top: 24px;
+      padding: 14px 22px;
+      border: 0;
+      border-radius: 10px;
+      color: white;
+      font-size: 16px;
+      font-weight: bold;
+      cursor: pointer;
+    }
+
+    .primary-button {
+      background: #2563eb;
+    }
+
+    .primary-button:hover {
+      background: #1d4ed8;
+    }
+
+    .success-button {
+      margin-top: 10px;
+      margin-right: 10px;
+      background: #16a34a;
+    }
+
+    .review-button {
+      margin-top: 10px;
+      background: #d97706;
+    }
+
+    #result {
+      display: none;
+      margin-top: 24px;
+      background: white;
+      padding: 28px;
+      border-radius: 18px;
+      border-left: 8px solid #2563eb;
+    }
+
+    .result-title {
+      margin: 0 0 18px;
+      font-size: 26px;
+    }
+
+    .decision {
+      display: inline-block;
+      padding: 9px 14px;
+      border-radius: 999px;
+      font-size: 21px;
+      font-weight: bold;
+      margin-bottom: 12px;
+    }
+
+    .decision.Aumentar {
+      color: #166534;
+      background: #dcfce7;
+    }
+
+    .decision.Mantener {
+      color: #1d4ed8;
+      background: #dbeafe;
+    }
+
+    .decision.Reducir {
+      color: #b91c1c;
+      background: #fee2e2;
+    }
+
+    .result-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+      gap: 14px;
+      margin: 12px 0 24px;
+    }
+
+    .metric {
+      padding: 15px;
+      border: 1px solid #e2e8f0;
+      border-radius: 12px;
+      background: #f8fafc;
+    }
+
+    .metric-label {
+      color: #475569;
+      font-size: 13px;
+      margin-bottom: 6px;
+    }
+
+    .metric-value {
+      font-size: 20px;
+      font-weight: bold;
+    }
+
+    .human-review {
+      margin-top: 20px;
+      padding-top: 20px;
+      border-top: 1px solid #e2e8f0;
+    }
+
+    .human-review h3 {
+      margin: 0 0 6px;
+    }
+
+    .human-review p {
+      color: #475569;
+      margin-top: 0;
+      font-size: 14px;
+    }
+
+    textarea {
+      min-height: 86px;
+      resize: vertical;
+      margin-top: 8px;
+    }
+
+    #review-message {
+      margin-top: 14px;
+      font-weight: bold;
+    }
+
+    .approved { color: #15803d; }
+    .under-review { color: #b45309; }
+    .error { color: #b91c1c; }
+
+    @media (max-width: 850px) {
+      .grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+    }
+
+    @media (max-width: 550px) {
+      body { padding: 16px; }
+
+      h1 { font-size: 28px; }
+
+      .grid {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <main>
+    <header>
+      <h1>Recomendador de Límite de Crédito</h1>
+      <p>PoC para apoyar decisiones del Área de Riesgo Crediticio.</p>
+
+      <div class="header-actions">
+        <a class="header-link" href="/ingesta">
+          Ingesta y validación de cartera
+        </a>
+
+        <a class="header-link" href="/dashboard">
+          Dashboard de operación
+        </a>
+      </div>
+    </header>
+
+    <p class="notice">
+      Demo con datos anonimizados/sintéticos. La recomendación no reemplaza la revisión humana.
+    </p>
+
+    <section class="evaluation-card">
+      <h2 class="section-title">Ficha de evaluación crediticia</h2>
+      <p class="section-description">
+        Revisá la información disponible del cliente y solicitá una recomendación al modelo.
+      </p>
+
+      <form id="evaluation">
+        <div id="fields" class="grid"></div>
+        <button class="primary-button" type="submit">Obtener recomendación</button>
+      </form>
+    </section>
+
+    <section id="result"></section>
+  </main>
+
+  <script>
+    const paymentOptions = [
+      [-2, "Sin consumo"],
+      [-1, "Pago completo"],
+      [0, "Al día / crédito revolvente"],
+      [1, "Atraso de 1 mes"],
+      [2, "Atraso de 2 meses"],
+      [3, "Atraso de 3 meses"],
+      [4, "Atraso de 4 meses"],
+      [5, "Atraso de 5 meses"],
+      [6, "Atraso de 6 meses"],
+      [7, "Atraso de 7 meses"],
+      [8, "Atraso de 8 meses o más"]
+    ];
+
+    const fields = [
+      ["Credit_Limit", "Límite actual", 50000, "number"],
+      ["SEX", "Sexo", 2, "select", [
+        [1, "Masculino"],
+        [2, "Femenino"]
+      ]],
+      ["EDUCATION", "Educación", 2, "select", [
+        [0, "No informado"],
+        [1, "Posgrado"],
+        [2, "Universidad"],
+        [3, "Secundario"],
+        [4, "Otros"],
+        [5, "Otra categoría"],
+        [6, "Otra categoría"]
+      ]],
+      ["MARRIAGE", "Estado civil", 1, "select", [
+        [0, "No informado"],
+        [1, "Casado/a"],
+        [2, "Soltero/a"],
+        [3, "Otro"]
+      ]],
+      ["AGE", "Edad", 30, "number"],
+      ["PAY_0", "Estado de pago actual", 0, "select", paymentOptions],
+      ["PAY_2", "Estado de pago mes -2", 0, "select", paymentOptions],
+      ["PAY_3", "Estado de pago mes -3", 0, "select", paymentOptions],
+      ["PAY_4", "Estado de pago mes -4", 0, "select", paymentOptions],
+      ["PAY_5", "Estado de pago mes -5", 0, "select", paymentOptions],
+      ["PAY_6", "Estado de pago mes -6", 0, "select", paymentOptions],
+      ["BILL_AMT1", "Facturación mes 1", 25000, "number"],
+      ["BILL_AMT2", "Facturación mes 2", 24000, "number"],
+      ["BILL_AMT3", "Facturación mes 3", 23000, "number"],
+      ["BILL_AMT4", "Facturación mes 4", 22000, "number"],
+      ["BILL_AMT5", "Facturación mes 5", 21000, "number"],
+      ["BILL_AMT6", "Facturación mes 6", 20000, "number"],
+      ["PAY_AMT1", "Pago mes 1", 5000, "number"],
+      ["PAY_AMT2", "Pago mes 2", 5000, "number"],
+      ["PAY_AMT3", "Pago mes 3", 5000, "number"],
+      ["PAY_AMT4", "Pago mes 4", 5000, "number"],
+      ["PAY_AMT5", "Pago mes 5", 5000, "number"],
+      ["PAY_AMT6", "Pago mes 6", 5000, "number"],
+      ["DEFAULT", "¿Tuvo default?", 0, "select", [
+        [0, "No"],
+        [1, "Sí"]
+      ]]
+    ];
+
+    const container = document.getElementById("fields");
+
+    fields.forEach(([name, label, value, type, options]) => {
+      const wrapper = document.createElement("label");
+      wrapper.textContent = label;
+
+      let element;
+
+      if (type === "select") {
+        element = document.createElement("select");
+
+        options.forEach(([optionValue, optionText]) => {
+          const option = document.createElement("option");
+          option.value = optionValue;
+          option.textContent = optionText;
+
+          if (optionValue === value) {
+            option.selected = true;
+          }
+
+          element.appendChild(option);
+        });
+      } else {
+        element = document.createElement("input");
+        element.type = "number";
+        element.step = "any";
+        element.value = value;
+      }
+
+      element.id = name;
+      element.required = true;
+
+      wrapper.appendChild(element);
+      container.appendChild(wrapper);
+    });
+
+    function money(value) {
+      return `$${Number(value).toLocaleString("es-AR", {
+        maximumFractionDigits: 2
+      })}`;
+    }
+
+    function saveReviewStatus(recordId, status, comment) {
+      const history = JSON.parse(
+        localStorage.getItem("credit_session_results") || "[]"
+      );
+
+      const record = history.find((item) => item.id === recordId);
+
+      if (record) {
+        record.review_status = status;
+        record.analyst_comment = comment;
+
+        localStorage.setItem(
+          "credit_session_results",
+          JSON.stringify(history)
+        );
+      }
+    }
+
+    document.getElementById("evaluation").addEventListener("submit", async (event) => {
+      event.preventDefault();
+
+      const payload = Object.fromEntries(
+        fields.map(([name]) => [
+          name,
+          Number(document.getElementById(name).value)
+        ])
+      );
+
+      const result = document.getElementById("result");
+      result.style.display = "block";
+      result.innerHTML = "<p>Consultando modelo...</p>";
+
+      try {
+        const response = await fetch("/predict", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload)
+        });
+
+        const data = await response.json();
+
+        if (!response.ok) {
+          throw new Error(
+            data.detail || "No fue posible obtener una recomendación."
+          );
+        }
+
+        const difference =
+          Number(data.assigned_credit_limit_pred) -
+          Number(data.credit_limit_actual);
+
+        const recordId = `${Date.now()}-${Math.random()}`;
+
+        const history = JSON.parse(
+          localStorage.getItem("credit_session_results") || "[]"
+        );
+
+        history.push({
+          id: recordId,
+          datetime: new Date().toLocaleString("es-AR"),
+          review_status: "Pendiente",
+          ...data
+        });
+
+        localStorage.setItem(
+          "credit_session_results",
+          JSON.stringify(history)
+        );
+
+        result.innerHTML = `
+          <h2 class="result-title">Resultado de la evaluación</h2>
+
+          <div class="decision ${data.decision}">
+            Recomendación: ${data.decision}
+          </div>
+
+          <div class="result-grid">
+            <article class="metric">
+              <div class="metric-label">Límite actual</div>
+              <div class="metric-value">${money(data.credit_limit_actual)}</div>
+            </article>
+
+            <article class="metric">
+              <div class="metric-label">Límite recomendado</div>
+              <div class="metric-value">${money(data.assigned_credit_limit_pred)}</div>
+            </article>
+
+            <article class="metric">
+              <div class="metric-label">Diferencia sugerida</div>
+              <div class="metric-value">${money(difference)}</div>
+            </article>
+
+            <article class="metric">
+              <div class="metric-label">Umbral aplicado</div>
+              <div class="metric-value">${money(data.umbral_abs)}</div>
+            </article>
+          </div>
+
+          <p><strong>Versión del modelo:</strong> ${data.model_version}</p>
+
+          <div class="human-review">
+            <h3>Revisión humana</h3>
+            <p>
+              El analista confirma la recomendación o la envía a revisión.
+            </p>
+
+            <label>
+              Comentario del analista (opcional)
+              <textarea id="analyst-comment"
+                placeholder="Ej.: Caso revisado; recomendación aprobada."></textarea>
+            </label>
+
+            <button id="approve-button" class="success-button" type="button">
+              Aprobar recomendación
+            </button>
+
+            <button id="review-button" class="review-button" type="button">
+              Solicitar revisión
+            </button>
+
+            <p id="review-message"></p>
+          </div>
+        `;
+
+        document.getElementById("approve-button").addEventListener("click", () => {
+          const comment = document.getElementById("analyst-comment").value.trim();
+
+          saveReviewStatus(recordId, "Aprobada", comment);
+
+          const message = comment
+            ? `Recomendación aprobada. Comentario registrado: ${comment}`
+            : "Recomendación aprobada por el analista.";
+
+          document.getElementById("review-message").innerHTML =
+            `<span class="approved">${message}</span>`;
+        });
+
+        document.getElementById("review-button").addEventListener("click", () => {
+          const comment = document.getElementById("analyst-comment").value.trim();
+
+          saveReviewStatus(recordId, "En revisión", comment);
+
+          const message = comment
+            ? `Caso enviado a revisión. Comentario registrado: ${comment}`
+            : "Caso enviado a revisión humana.";
+
+          document.getElementById("review-message").innerHTML =
+            `<span class="under-review">${message}</span>`;
+        });
+      } catch (error) {
+        result.innerHTML = `<p class="error">Error: ${error.message}</p>`;
+      }
+    });
+  </script>
+</body>
+</html>
