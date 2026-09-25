@@ -1,0 +1,359 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Dashboard de operación | Límite de Crédito</title>
+
+  <style>
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      padding: 32px;
+      font-family: Arial, sans-serif;
+      background: #f1f5f9;
+      color: #0f172a;
+    }
+
+    main {
+      max-width: 1180px;
+      margin: auto;
+    }
+
+    header {
+      background: #0f172a;
+      color: white;
+      padding: 30px;
+      border-radius: 18px;
+      margin-bottom: 18px;
+    }
+
+    h1 {
+      margin: 0 0 8px;
+      font-size: 34px;
+    }
+
+    header p {
+      margin: 0;
+      color: #cbd5e1;
+      font-size: 17px;
+    }
+
+    .back-link {
+      display: inline-block;
+      margin: 4px 0 18px;
+      color: #1d4ed8;
+      font-weight: bold;
+      text-decoration: none;
+    }
+
+    .notice {
+      color: #475569;
+      font-size: 14px;
+      margin: 0 0 18px;
+    }
+
+    .metrics-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+      gap: 14px;
+      margin-bottom: 18px;
+    }
+
+    .metric-card,
+    .card {
+      background: white;
+      padding: 22px;
+      border-radius: 16px;
+    }
+
+    .metric-label {
+      color: #475569;
+      font-size: 14px;
+      margin-bottom: 8px;
+    }
+
+    .metric-value {
+      color: #2563eb;
+      font-size: 30px;
+      font-weight: bold;
+    }
+
+    .card {
+      margin-bottom: 18px;
+    }
+
+    h2 {
+      margin-top: 0;
+      font-size: 23px;
+    }
+
+    .decision-row {
+      display: grid;
+      grid-template-columns: 120px 1fr 55px;
+      align-items: center;
+      gap: 12px;
+      margin: 14px 0;
+    }
+
+    .bar-background {
+      height: 24px;
+      background: #e2e8f0;
+      border-radius: 8px;
+      overflow: hidden;
+    }
+
+    .bar {
+      height: 100%;
+      border-radius: 8px;
+      min-width: 2px;
+    }
+
+    .increase { background: #16a34a; }
+    .maintain { background: #2563eb; }
+    .reduce { background: #dc2626; }
+
+    table {
+      width: 100%;
+      min-width: 680px;
+      border-collapse: collapse;
+      font-size: 14px;
+    }
+
+    th,
+    td {
+      padding: 11px;
+      text-align: left;
+      border-bottom: 1px solid #e2e8f0;
+    }
+
+    th {
+      background: #eff6ff;
+      color: #1e3a8a;
+    }
+
+    .table-container {
+      overflow-x: auto;
+    }
+
+    .badge {
+      display: inline-block;
+      padding: 5px 9px;
+      border-radius: 999px;
+      font-size: 12px;
+      font-weight: bold;
+    }
+
+    .badge-Aumentar {
+      color: #166534;
+      background: #dcfce7;
+    }
+
+    .badge-Mantener {
+      color: #1d4ed8;
+      background: #dbeafe;
+    }
+
+    .badge-Reducir {
+      color: #b91c1c;
+      background: #fee2e2;
+    }
+
+    .empty {
+      color: #64748b;
+      line-height: 1.5;
+    }
+
+    .ingestion-ok {
+      color: #166534;
+      font-weight: bold;
+    }
+
+    .ingestion-warning {
+      color: #b45309;
+      font-weight: bold;
+    }
+
+    @media (max-width: 650px) {
+      body { padding: 16px; }
+      h1 { font-size: 27px; }
+
+      .decision-row {
+        grid-template-columns: 95px 1fr 40px;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <main>
+    <header>
+      <h1>Dashboard de operación</h1>
+      <p>Resumen de actividad de la sesión actual.</p>
+    </header>
+
+    <a class="back-link" href="/">← Volver a la ficha de evaluación crediticia</a>
+
+    <p class="notice">
+      Los indicadores se calculan solo con la actividad de este navegador.
+      No se almacenan datos de clientes en una base de datos.
+    </p>
+
+    <section class="metrics-grid">
+      <article class="metric-card">
+        <div class="metric-label">Casos evaluados</div>
+        <div id="total-cases" class="metric-value">0</div>
+      </article>
+
+      <article class="metric-card">
+        <div class="metric-label">Recomendaciones de aumento</div>
+        <div id="increase-cases" class="metric-value">0</div>
+      </article>
+
+      <article class="metric-card">
+        <div class="metric-label">Casos aprobados</div>
+        <div id="approved-cases" class="metric-value">0</div>
+      </article>
+
+      <article class="metric-card">
+        <div class="metric-label">Casos en revisión</div>
+        <div id="review-cases" class="metric-value">0</div>
+      </article>
+    </section>
+
+    <section class="card">
+      <h2>Distribución de recomendaciones</h2>
+
+      <div class="decision-row">
+        <span>Aumentar</span>
+        <div class="bar-background">
+          <div id="bar-Aumentar" class="bar increase"></div>
+        </div>
+        <strong id="count-Aumentar">0</strong>
+      </div>
+
+      <div class="decision-row">
+        <span>Mantener</span>
+        <div class="bar-background">
+          <div id="bar-Mantener" class="bar maintain"></div>
+        </div>
+        <strong id="count-Mantener">0</strong>
+      </div>
+
+      <div class="decision-row">
+        <span>Reducir</span>
+        <div class="bar-background">
+          <div id="bar-Reducir" class="bar reduce"></div>
+        </div>
+        <strong id="count-Reducir">0</strong>
+      </div>
+    </section>
+
+    <section class="card">
+      <h2>Última validación de cartera</h2>
+      <div id="ingestion-summary" class="empty">
+        Todavía no se validó ningún archivo Excel en esta sesión.
+      </div>
+    </section>
+
+    <section class="card">
+      <h2>Últimas evaluaciones</h2>
+      <div id="history-table" class="empty">
+        Todavía no hay evaluaciones en esta sesión.
+      </div>
+    </section>
+  </main>
+
+  <script>
+    function getData(key) {
+      try {
+        return JSON.parse(localStorage.getItem(key)) || [];
+      } catch {
+        return [];
+      }
+    }
+
+    function money(value) {
+      return `$${Number(value).toLocaleString("es-AR", {
+        maximumFractionDigits: 2
+      })}`;
+    }
+
+    const results = getData("credit_session_results");
+    const ingestion = getData("credit_latest_ingestion");
+
+    const counts = {
+      Aumentar: results.filter((item) => item.decision === "Aumentar").length,
+      Mantener: results.filter((item) => item.decision === "Mantener").length,
+      Reducir: results.filter((item) => item.decision === "Reducir").length
+    };
+
+    const approved = results.filter(
+      (item) => item.review_status === "Aprobada"
+    ).length;
+
+    const underReview = results.filter(
+      (item) => item.review_status === "En revisión"
+    ).length;
+
+    document.getElementById("total-cases").textContent = results.length;
+    document.getElementById("increase-cases").textContent = counts.Aumentar;
+    document.getElementById("approved-cases").textContent = approved;
+    document.getElementById("review-cases").textContent = underReview;
+
+    ["Aumentar", "Mantener", "Reducir"].forEach((decision) => {
+      const percentage = results.length
+        ? (counts[decision] / results.length) * 100
+        : 0;
+
+      document.getElementById(`bar-${decision}`).style.width = `${percentage}%`;
+      document.getElementById(`count-${decision}`).textContent = counts[decision];
+    });
+
+    const ingestionSummary = document.getElementById("ingestion-summary");
+
+    if (ingestion.filename) {
+      ingestionSummary.innerHTML = `
+        <p><strong>Archivo:</strong> ${ingestion.filename}</p>
+        <p><strong>Filas:</strong> ${Number(ingestion.rows).toLocaleString("es-AR")}</p>
+        <p><strong>Columnas:</strong> ${ingestion.columns}</p>
+        <p class="${ingestion.valid_for_training ? "ingestion-ok" : "ingestion-warning"}">
+          ${ingestion.message}
+        </p>
+      `;
+    }
+
+    const historyTable = document.getElementById("history-table");
+
+    if (results.length) {
+      const rows = [...results].reverse().slice(0, 10).map((item) => `
+        <tr>
+          <td>${item.datetime}</td>
+          <td>${money(item.credit_limit_actual)}</td>
+          <td>${money(item.assigned_credit_limit_pred)}</td>
+          <td><span class="badge badge-${item.decision}">${item.decision}</span></td>
+          <td>${item.review_status || "Pendiente"}</td>
+        </tr>
+      `).join("");
+
+      historyTable.innerHTML = `
+        <div class="table-container">
+          <table>
+            <thead>
+              <tr>
+                <th>Fecha y hora</th>
+                <th>Límite actual</th>
+                <th>Límite recomendado</th>
+                <th>Decisión</th>
+                <th>Revisión humana</th>
+              </tr>
+            </thead>
+            <tbody>${rows}</tbody>
+          </table>
+        </div>
+      `;
+    }
+  </script>
+</body>
+</html>
