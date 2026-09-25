@@ -2,7 +2,7 @@ import json
 
 
 def log_prediction(latency_ms, decision, model_version):
-    print(
+    print( 
         json.dumps(
             {
                 "event": "prediction",
