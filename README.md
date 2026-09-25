@@ -139,3 +139,55 @@ models/credito-limite-metrics.json
 ```bash
 export MODEL_PATH="models/credito-limite.joblib"
 export METRICS_PATH="models/credito-limite-metrics.json"
+
+---
+
+## Verificación de reproducibilidad
+
+Una persona con acceso al repositorio debe poder ejecutar la solución sin utilizar Cloud Shell ni credenciales de Google Cloud.
+
+### Pasos de validación
+
+```bash
+git clone https://github.com/pimartinez97/tp-_limite_credito.git
+cd tp-_limite_credito
+
+docker build -t credito-api .
+docker run --rm -p 8080:8080 credito-api
+```
+
+En una segunda terminal:
+
+```bash
+curl http://localhost:8080/health
+```
+
+Resultado esperado:
+
+```json
+{
+  "status": "ok",
+  "model_loaded": true,
+  "model_version": "credito-limite"
+}
+```
+
+Luego:
+
+```bash
+curl -X POST "http://localhost:8080/predict" \
+  -H "Content-Type: application/json" \
+  -d @data/fixtures/customer-example.json
+```
+
+La respuesta debe contener una recomendación `Aumentar`, `Mantener` o `Reducir`.
+
+Finalmente, abrir:
+
+```text
+http://localhost:8080
+```
+
+Debe visualizarse la ficha de evaluación crediticia, permitir solicitar una recomendación y registrar la revisión humana en la sesión del navegador.
+
+> Requisito: el repositorio debe incluir `models/credito-limite.joblib`. Sin el artefacto del modelo no es posible ejecutar inferencias.
