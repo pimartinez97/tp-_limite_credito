@@ -134,12 +134,6 @@ sleep 3
 curl http://localhost:8080/health
 ```
 
-Resultado esperado:
-
-```json
-{"status":"ok","model_loaded":true,"model_version":"credito-limite"}
-```
-
 Si no responde, revisar el error de inicio:
 
 ```bash
