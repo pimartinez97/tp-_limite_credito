@@ -107,48 +107,69 @@ pip install --upgrade -r requirements.txt
 
 ## 4. Iniciar la API
 
-Mac/Linux:
+Abrir una primera terminal y ejecutar:
 
 ```bash
+cd ~/tp-_limite_credito
+source .venv/bin/activate
+
 export MODEL_PATH="models/credito-limite.joblib"
 export METRICS_PATH="models/credito-limite-metrics.json"
-
-uvicorn app.main:app --host 0.0.0.0 --port 8080 > api.log 2>&1 &
-```
-
-Windows PowerShell:
-
-```powershell
-$env:MODEL_PATH="models/credito-limite.joblib"
-$env:METRICS_PATH="models/credito-limite-metrics.json"
 
 uvicorn app.main:app --host 0.0.0.0 --port 8080
 ```
 
-## 5. Comprobar que el servicio funciona
+La terminal debe mostrar:
 
-Mac/Linux:
-
-```bash
-sleep 3
-curl http://localhost:8080/health
+```text
+Uvicorn running on http://0.0.0.0:8080
 ```
 
-Si no responde, revisar el error de inicio:
+Mantener esta terminal abierta mientras se realizan las pruebas.
+
+## 5. Comprobar que el servicio funciona
+
+Abrir una segunda terminal y ejecutar:
 
 ```bash
-cat api.log
+curl -i http://127.0.0.1:8080/health
+```
+
+Resultado esperado:
+
+```text
+HTTP/1.1 200 OK
+```
+
+```json
+{"status":"ok","model_loaded":true,"model_version":"credito-limite"}
+```
+
+En la primera terminal se registrará:
+
+```text
+GET /health HTTP/1.1" 200 OK
 ```
 
 ## 6. Probar una predicción
 
+En la segunda terminal, ejecutar:
+
 ```bash
-curl -X POST "http://localhost:8080/predict" \
+cd ~/tp-_limite_credito
+
+curl -i -X POST "http://127.0.0.1:8080/predict" \
   -H "Content-Type: application/json" \
   -d @data/fixtures/customer-example.json
 ```
 
-La respuesta debe contener:
+La respuesta debe devolver:
+
+```text
+HTTP/1.1 200 OK
+```
+
+y contener:
 
 ```text
 model_version
@@ -159,6 +180,12 @@ decision
 ```
 
 El valor de `decision` será `Aumentar`, `Mantener` o `Reducir`.
+
+Para detener la API, volver a la primera terminal y presionar:
+
+```text
+Ctrl + C
+```
 
 ## 7. Abrir la interfaz web
 
