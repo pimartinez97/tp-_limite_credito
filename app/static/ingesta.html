@@ -1,0 +1,401 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Ingesta y validación de cartera</title>
+
+  <style>
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      padding: 32px;
+      font-family: Arial, sans-serif;
+      background: #f1f5f9;
+      color: #0f172a;
+    }
+
+    main {
+      max-width: 1080px;
+      margin: auto;
+    }
+
+    header {
+      background: #0f172a;
+      color: white;
+      padding: 30px;
+      border-radius: 18px;
+      margin-bottom: 18px;
+    }
+
+    h1 {
+      margin: 0 0 8px;
+      font-size: 34px;
+    }
+
+    header p {
+      margin: 0;
+      color: #cbd5e1;
+      font-size: 17px;
+    }
+
+    .links {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 14px;
+      margin-bottom: 18px;
+    }
+
+    .back-link {
+      display: inline-block;
+      color: #1d4ed8;
+      font-weight: bold;
+      text-decoration: none;
+    }
+
+    .card {
+      background: white;
+      padding: 28px;
+      border-radius: 18px;
+      margin-bottom: 18px;
+    }
+
+    h2 {
+      margin-top: 0;
+      font-size: 23px;
+    }
+
+    .notice {
+      padding: 14px;
+      border-radius: 10px;
+      background: #eff6ff;
+      color: #1e3a8a;
+      font-size: 14px;
+      line-height: 1.45;
+    }
+
+    .upload-box {
+      margin-top: 20px;
+      padding: 25px;
+      border: 2px dashed #93c5fd;
+      border-radius: 14px;
+      background: #f8fafc;
+    }
+
+    label {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      font-weight: bold;
+    }
+
+    input[type="file"] {
+      padding: 12px;
+      border: 1px solid #cbd5e1;
+      border-radius: 10px;
+      background: white;
+      font-size: 15px;
+    }
+
+    button {
+      margin-top: 16px;
+      padding: 13px 20px;
+      border: 0;
+      border-radius: 10px;
+      background: #2563eb;
+      color: white;
+      font-size: 16px;
+      font-weight: bold;
+      cursor: pointer;
+    }
+
+    button:hover {
+      background: #1d4ed8;
+    }
+
+    button:disabled {
+      background: #94a3b8;
+      cursor: not-allowed;
+    }
+
+    #result {
+      display: none;
+      margin-top: 22px;
+    }
+
+    .status {
+      padding: 15px;
+      border-radius: 12px;
+      font-size: 17px;
+      font-weight: bold;
+      margin-bottom: 18px;
+    }
+
+    .status.ok {
+      background: #dcfce7;
+      color: #166534;
+    }
+
+    .status.error {
+      background: #fee2e2;
+      color: #b91c1c;
+    }
+
+    .metrics {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 14px;
+      margin-bottom: 20px;
+    }
+
+    .metric {
+      padding: 16px;
+      border: 1px solid #e2e8f0;
+      border-radius: 12px;
+      background: #f8fafc;
+    }
+
+    .metric-label {
+      color: #475569;
+      font-size: 13px;
+      margin-bottom: 6px;
+    }
+
+    .metric-value {
+      font-size: 22px;
+      font-weight: bold;
+      word-break: break-word;
+    }
+
+    .validation-list {
+      margin: 0;
+      padding-left: 20px;
+      line-height: 1.7;
+    }
+
+    .good { color: #15803d; }
+    .warning { color: #b45309; }
+    .bad { color: #b91c1c; }
+
+    .small-text {
+      color: #64748b;
+      font-size: 13px;
+      line-height: 1.45;
+    }
+
+    @media (max-width: 550px) {
+      body { padding: 16px; }
+      h1 { font-size: 27px; }
+    }
+  </style>
+</head>
+
+<body>
+  <main>
+    <header>
+      <h1>Ingesta y validación de cartera</h1>
+      <p>Control interno de calidad de datos previo al flujo de entrenamiento.</p>
+    </header>
+
+    <div class="links">
+      <a class="back-link" href="/">← Ficha de evaluación crediticia</a>
+      <a class="back-link" href="/dashboard">Ver Dashboard de operación →</a>
+    </div>
+
+    <section class="card">
+      <h2>Cargar archivo Excel</h2>
+
+      <div class="notice">
+        Esta pantalla es para uso interno. El archivo se analiza temporalmente
+        para validar estructura y calidad; la aplicación no lo guarda ni
+        reentrena el modelo automáticamente.
+      </div>
+
+      <div class="upload-box">
+        <label for="excel-file">
+          Seleccioná el Excel de cartera (.xlsx)
+          <input id="excel-file" type="file" accept=".xlsx">
+        </label>
+
+        <button id="validate-button" type="button">
+          Validar archivo
+        </button>
+
+        <p class="small-text">
+          Tamaño máximo: 10 MB. Usá únicamente datos anonimizados o sintéticos.
+        </p>
+      </div>
+
+      <section id="result"></section>
+    </section>
+  </main>
+
+  <script>
+    const fileInput = document.getElementById("excel-file");
+    const validateButton = document.getElementById("validate-button");
+    const result = document.getElementById("result");
+
+    function listItem(label, status, detail) {
+      return `
+        <li class="${status}">
+          <strong>${label}:</strong> ${detail}
+        </li>
+      `;
+    }
+
+    validateButton.addEventListener("click", async () => {
+      if (!fileInput.files.length) {
+        result.style.display = "block";
+        result.innerHTML = `
+          <div class="status error">
+            Seleccioná un archivo Excel antes de continuar.
+          </div>
+        `;
+        return;
+      }
+
+      const selectedFile = fileInput.files[0];
+
+      if (!selectedFile.name.toLowerCase().endsWith(".xlsx")) {
+        result.style.display = "block";
+        result.innerHTML = `
+          <div class="status error">
+            El archivo debe tener extensión .xlsx.
+          </div>
+        `;
+        return;
+      }
+
+      const formData = new FormData();
+      formData.append("file", selectedFile);
+
+      validateButton.disabled = true;
+      validateButton.textContent = "Validando archivo...";
+
+      result.style.display = "block";
+      result.innerHTML = "<p>Analizando estructura y calidad del dataset...</p>";
+
+      try {
+        const response = await fetch("/validate-dataset", {
+          method: "POST",
+          body: formData
+        });
+
+        const data = await response.json();
+
+        if (!response.ok) {
+          throw new Error(data.detail || "No fue posible validar el archivo.");
+        }
+
+        localStorage.setItem(
+          "credit_latest_ingestion",
+          JSON.stringify({
+            ...data,
+            validated_at: new Date().toLocaleString("es-AR")
+          })
+        );
+
+        const trainingStatus = data.valid_for_training
+          ? "ok"
+          : "error";
+
+        const targetText = data.target_available
+          ? "Variable objetivo disponible."
+          : "Falta Assigned_Credit_Limit; no se podrá reentrenar.";
+
+        const columnsText = data.missing_columns.length
+          ? `Faltan: ${data.missing_columns.join(", ")}`
+          : "Todas las columnas requeridas están presentes.";
+
+        const numericText = data.non_numeric_columns.length
+          ? `Valores no numéricos en: ${data.non_numeric_columns.join(", ")}`
+          : "Las variables requeridas son numéricas.";
+
+        const nullText = data.null_values === 0
+          ? "No se detectaron valores faltantes críticos."
+          : `Se detectaron ${data.null_values} valores faltantes.`;
+
+        const duplicateText = data.duplicate_ids === 0
+          ? "No se detectaron IDs duplicados."
+          : `Se detectaron ${data.duplicate_ids} IDs duplicados.`;
+
+        result.innerHTML = `
+          <div class="status ${trainingStatus}">
+            ${data.message}
+          </div>
+
+          <div class="metrics">
+            <article class="metric">
+              <div class="metric-label">Archivo analizado</div>
+              <div class="metric-value">${data.filename}</div>
+            </article>
+
+            <article class="metric">
+              <div class="metric-label">Filas</div>
+              <div class="metric-value">
+                ${Number(data.rows).toLocaleString("es-AR")}
+              </div>
+            </article>
+
+            <article class="metric">
+              <div class="metric-label">Columnas</div>
+              <div class="metric-value">${data.columns}</div>
+            </article>
+
+            <article class="metric">
+              <div class="metric-label">Estado</div>
+              <div class="metric-value">
+                ${data.valid_for_training ? "Apto" : "Revisar"}
+              </div>
+            </article>
+          </div>
+
+          <h2>Resultado de validaciones</h2>
+
+          <ul class="validation-list">
+            ${listItem(
+              "Columnas requeridas",
+              data.missing_columns.length ? "bad" : "good",
+              columnsText
+            )}
+
+            ${listItem(
+              "Variable objetivo",
+              data.target_available ? "good" : "warning",
+              targetText
+            )}
+
+            ${listItem(
+              "Valores faltantes",
+              data.null_values === 0 ? "good" : "warning",
+              nullText
+            )}
+
+            ${listItem(
+              "Tipos numéricos",
+              data.non_numeric_columns.length ? "bad" : "good",
+              numericText
+            )}
+
+            ${listItem(
+              "IDs duplicados",
+              data.duplicate_ids === 0 ? "good" : "warning",
+              duplicateText
+            )}
+          </ul>
+        `;
+      } catch (error) {
+        result.innerHTML = `
+          <div class="status error">
+            Error: ${error.message}
+          </div>
+        `;
+      } finally {
+        validateButton.disabled = false;
+        validateButton.textContent = "Validar archivo";
+      }
+    });
+  </script>
+</body>
+</html>
