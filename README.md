@@ -51,7 +51,6 @@ La solución incluye:
 
 - Python 3.12 o superior
 - Git
-- Docker (opcional, para ejecutar mediante contenedor)
 - Acceso al repositorio privado
 
 El archivo `models/credito-limite.joblib` es obligatorio: contiene el modelo ya entrenado.
@@ -60,7 +59,7 @@ El archivo `models/credito-limite.joblib` es obligatorio: contiene el modelo ya 
 
 # Verificación de reproducibilidad
 
-Estos pasos permiten levantar una copia independiente del proyecto sin usar Cloud Shell, GCP ni credenciales de otra persona.
+Estos pasos permiten levantar una copia independiente del proyecto en Cloud Shell, sin utilizar el proyecto de GCP ni las credenciales de otra persona.
 
 ## 1. Clonar el repositorio
 
@@ -89,7 +88,7 @@ Los tres comandos deben mostrar archivos existentes.
 
 ## 3. Crear el entorno e instalar dependencias
 
-Mac/Linux:
+En Cloud Shell ejecutar:
 
 ```bash
 python3 -m venv .venv
@@ -97,13 +96,7 @@ source .venv/bin/activate
 pip install --upgrade -r requirements.txt
 ```
 
-Windows PowerShell:
-
-```powershell
-python -m venv .venv
-.venv\Scripts\activate
-pip install --upgrade -r requirements.txt
-```
+> Aunque se abra Cloud Shell desde una computadora Windows, Cloud Shell utiliza Linux. Por eso se deben usar estos comandos y no las rutas `Scripts\` de Windows.
 
 ## 4. Iniciar la API
 
@@ -181,57 +174,37 @@ decision
 
 El valor de `decision` será `Aumentar`, `Mantener` o `Reducir`.
 
-Para detener la API, volver a la primera terminal y presionar:
+## 7. Abrir la interfaz web en Cloud Shell
+
+Con Uvicorn ejecutándose en la primera terminal:
+
+1. En la parte superior derecha de Cloud Shell, hacer clic en **Web Preview**.
+2. Elegir **Preview on port 8080**.
+3. Se abrirá una URL temporal propia de la sesión de Cloud Shell.
+
+La pantalla inicial mostrará:
+
+```text
+Recomendador de Límite de Crédito
+PoC para apoyar decisiones del Área de Riesgo Crediticio.
+```
+
+Desde esa pantalla se puede acceder a:
+
+| Sección | Uso |
+|---|---|
+| Recomendador de Límite de Crédito | Evaluación individual, recomendación y revisión humana |
+| Ingesta y validación de cartera | Validación de un archivo Excel antes de utilizarlo en el flujo |
+| Dashboard de operación | Resumen de evaluaciones y decisiones de la sesión |
+---
+
+````markdown
+Cuando terminen las pruebas y la navegación por la interfaz, volver a la primera terminal y presionar:
 
 ```text
 Ctrl + C
-```
-
-## 7. Abrir la interfaz web
-
-Abrir en un navegador:
-
-```text
-http://localhost:8080
-```
-
-Pantallas disponibles:
-
-| Ruta | Descripción |
-|---|---|
-| `/` | Ficha de evaluación crediticia y revisión humana |
-| `/ingesta` | Validación de un archivo Excel de cartera |
-| `/dashboard` | Resumen de actividad de la sesión |
-| `/docs` | Documentación Swagger/OpenAPI |
-| `/health` | Estado del modelo y de la API |
-
----
-
-# Ejecución con Docker
-
-Construir la imagen:
-
-```bash
-docker build -t credito-api .
-```
-
-Ejecutar el contenedor:
-
-```bash
-docker run --rm -p 8080:8080 credito-api
-```
-
-Luego abrir:
-
-```text
-http://localhost:8080
-```
-
----
 
 # Despliegue y operación
-
-La PoC fue desplegada en Google Cloud Run como servicio privado mediante IAM.
 
 La operación incluye:
 
