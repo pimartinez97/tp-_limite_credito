@@ -198,10 +198,8 @@ Desde esa pantalla se puede acceder a:
 | Dashboard de operación | Resumen de evaluaciones y decisiones de la sesión |
 ---
 
-````markdown
 Cuando terminen las pruebas y la navegación por la interfaz, volver a la primera terminal y presionar:
 
-```text
 Ctrl + C
 
 # Despliegue y operación
